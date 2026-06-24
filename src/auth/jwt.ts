@@ -5,10 +5,14 @@
 //   - "refresh" : long-lived token exchanged for new access tokens
 
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { config } from "../config.ts";
+import { getConfig } from "../config.ts";
 
-const secret = new TextEncoder().encode(config.jwtSecret);
 const ALG = "HS256";
+
+// Computed lazily (config is not available at module load on Workers).
+function secretKey(): Uint8Array {
+  return new TextEncoder().encode(getConfig().jwtSecret);
+}
 
 export type TokenKind = "code" | "access" | "refresh";
 
@@ -21,17 +25,19 @@ interface CodeClaims {
 }
 
 async function sign(claims: Record<string, unknown>, expiresIn: string): Promise<string> {
+  const config = getConfig();
   return new SignJWT(claims as JWTPayload)
     .setProtectedHeader({ alg: ALG })
     .setIssuedAt()
     .setIssuer(config.issuer)
     .setAudience(config.resource)
     .setExpirationTime(expiresIn)
-    .sign(secret);
+    .sign(secretKey());
 }
 
 async function verify(token: string, kind: TokenKind): Promise<JWTPayload> {
-  const { payload } = await jwtVerify(token, secret, {
+  const config = getConfig();
+  const { payload } = await jwtVerify(token, secretKey(), {
     issuer: config.issuer,
     audience: config.resource,
   });

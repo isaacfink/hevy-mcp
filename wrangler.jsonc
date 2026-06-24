@@ -1,0 +1,18 @@
+{
+  // Cloudflare Workers configuration. The same src/index.ts entry runs on Bun and Workers.
+  // Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hevy-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-01",
+  // nodejs_compat lets the MCP SDK resolve any `node:*` imports on the Workers runtime.
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  // Non-secret vars. Set PUBLIC_URL to your deployed URL (workers.dev or a custom domain).
+  // Secrets (HEVY_API_KEY, MCP_PASSWORD, JWT_SECRET) are set with `wrangler secret put`.
+  "vars": {
+    "PUBLIC_URL": "https://hevy-mcp.YOUR-SUBDOMAIN.workers.dev"
+  }
+}

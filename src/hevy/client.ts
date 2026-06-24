@@ -2,7 +2,7 @@
 // `api-key` header from configuration. Non-2xx responses are turned into a
 // readable Error so tool handlers can surface them to the model.
 
-import { config } from "../config.ts";
+import { getConfig } from "../config.ts";
 
 type Query = Record<string, string | number | boolean | undefined | null>;
 
@@ -23,7 +23,7 @@ export class HevyError extends Error {
 }
 
 function buildUrl(path: string, query?: Query): string {
-  const url = new URL(config.hevyBaseUrl + path);
+  const url = new URL(getConfig().hevyBaseUrl + path);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null) {
@@ -40,7 +40,7 @@ export async function hevyRequest(
   options: RequestOptions = {},
 ): Promise<unknown> {
   const headers: Record<string, string> = {
-    "api-key": config.hevyApiKey,
+    "api-key": getConfig().hevyApiKey,
     Accept: "application/json",
   };
   if (options.body !== undefined) {

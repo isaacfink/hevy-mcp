@@ -8,7 +8,7 @@
 // All state lives in signed JWTs, so there is no database.
 
 import { Hono } from "hono";
-import { config } from "../config.ts";
+import { getConfig } from "../config.ts";
 import { loginPage } from "./login.ts";
 import {
   issueAuthorizationCode,
@@ -35,29 +35,33 @@ async function s256(verifier: string): Promise<string> {
 
 // ---- Discovery metadata -----------------------------------------------------
 
-authApp.get("/.well-known/oauth-authorization-server", (c) =>
-  c.json({
-    issuer: config.issuer,
-    authorization_endpoint: `${config.issuer}/authorize`,
-    token_endpoint: `${config.issuer}/token`,
-    registration_endpoint: `${config.issuer}/register`,
+authApp.get("/.well-known/oauth-authorization-server", (c) => {
+  const { issuer } = getConfig();
+  return c.json({
+    issuer,
+    authorization_endpoint: `${issuer}/authorize`,
+    token_endpoint: `${issuer}/token`,
+    registration_endpoint: `${issuer}/register`,
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
     scopes_supported: ["mcp"],
-  }),
-);
+  });
+});
 
 // Served both at the root and at the resource-suffixed path that some clients probe.
-const protectedResourceMetadata = {
-  resource: config.resource,
-  authorization_servers: [config.issuer],
-  scopes_supported: ["mcp"],
-  bearer_methods_supported: ["header"],
-};
-authApp.get("/.well-known/oauth-protected-resource", (c) => c.json(protectedResourceMetadata));
-authApp.get("/.well-known/oauth-protected-resource/mcp", (c) => c.json(protectedResourceMetadata));
+function protectedResourceMetadata() {
+  const { resource, issuer } = getConfig();
+  return {
+    resource,
+    authorization_servers: [issuer],
+    scopes_supported: ["mcp"],
+    bearer_methods_supported: ["header"],
+  };
+}
+authApp.get("/.well-known/oauth-protected-resource", (c) => c.json(protectedResourceMetadata()));
+authApp.get("/.well-known/oauth-protected-resource/mcp", (c) => c.json(protectedResourceMetadata()));
 
 // ---- Dynamic Client Registration (RFC 7591) ---------------------------------
 // Single-user: accept any registration and mint a client_id. We do not persist
@@ -129,7 +133,7 @@ authApp.post("/authorize", async (c) => {
     return c.text("Invalid authorization request.", 400);
   }
 
-  if (password !== config.mcpPassword) {
+  if (password !== getConfig().mcpPassword) {
     return c.html(loginPage({ ...p, error: "Incorrect password. Please try again." }), 401);
   }
 

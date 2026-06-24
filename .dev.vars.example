@@ -1,0 +1,5 @@
+# Local secrets for `wrangler dev` (Cloudflare). Copy to `.dev.vars` (gitignored).
+# In production these are set with `wrangler secret put <NAME>`.
+HEVY_API_KEY=00000000-0000-0000-0000-000000000000
+MCP_PASSWORD=change-me-to-a-strong-password
+JWT_SECRET=change-me-openssl-rand-hex-32

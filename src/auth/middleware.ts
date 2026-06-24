@@ -3,11 +3,11 @@
 // which is what triggers an MCP client (Claude, MCP Inspector) to start the OAuth flow.
 
 import type { Context, Next } from "hono";
-import { config } from "../config.ts";
+import { getConfig } from "../config.ts";
 import { verifyAccessToken } from "./jwt.ts";
 
 function challenge(): string {
-  const metadataUrl = `${config.issuer}/.well-known/oauth-protected-resource`;
+  const metadataUrl = `${getConfig().issuer}/.well-known/oauth-protected-resource`;
   return `Bearer resource_metadata="${metadataUrl}"`;
 }
 
